@@ -55,6 +55,8 @@ UKF::UKF() {
   weights_ = VectorXd(2*n_aug_+1);
 
   time_us_ = 0.0;
+
+  Xsig_pred_ = MatrixXd(n_x_, 2*n_aug_+1);
   
   NIS_radar_ = 0.0;
   NIS_laser_ = 0.0;
@@ -85,9 +87,9 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement_pack) {
 	    // first measurement
 	    //cout << "EKF: " << endl;
 	    
-	    x_ << 0.6,0.6,5.2,0;
-	    P_ << 1, 0, 0, 0, 0,
-	          0, 1, 0, 0, 0,
+	    x_ << 1,1,1,1,0.2;
+	    P_ << 0.2, 0, 0, 0, 0,
+	          0, 0.2, 0, 0, 0,
 	          0, 0, 1, 0, 0,
 	          0, 0, 0, 1, 0,
 	          0, 0, 0, 0, 1;
@@ -123,10 +125,12 @@ void UKF::ProcessMeasurement(MeasurementPackage measurement_pack) {
 	}
 
 
-	float delta_t = (measurement_pack.timestamp_ - time_us_)/100000.0;
+	// Predict
+	float delta_t = (measurement_pack.timestamp_ - time_us_)/1000000.0;
 	time_us_ = measurement_pack.timestamp_;
 	Prediction(delta_t);
 
+	// Update
 	if (measurement_pack.sensor_type_ == MeasurementPackage::LASER)
 		UpdateLidar(measurement_pack);
 	else if(measurement_pack.sensor_type_ == MeasurementPackage::RADAR)
